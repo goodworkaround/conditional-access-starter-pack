@@ -29,9 +29,11 @@
         }
     },
     "grantControls": {
-        "operator": "OR",
+        "operator": "AND",
         "builtInControls": [
-            "mfa"
+            "mfa",
+            "compliantDevice",
+            "domainJoinedDevice"
         ],
         "customAuthenticationFactors": [],
         "termsOfUse": []
