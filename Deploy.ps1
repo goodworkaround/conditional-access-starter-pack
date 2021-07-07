@@ -106,9 +106,11 @@ Process {
     $policiesToDeploy |
         Where-Object displayName -notin $conditionalAccessPolicies.displayName |
         ForEach-Object {
-            Write-Verbose "Creating CA policy '$($_.displayName)'"
-            $result = Invoke-MgGraphRequest -Method Post -Uri "https://graph.microsoft.com/v1.0/identity/conditionalAccess/policies" -Body ($_ | ConvertTo-Json -Depth 10) -ContentType "application/json"
-            Write-Verbose "CA policy '$($_.displayName)' was created with id $($result.Id)"
+            if($PSCmdlet.ShouldProcess("Creating CA policy '$($_.displayName)'")){
+                Write-Verbose "Creating CA policy '$($_.displayName)'"
+                $result = Invoke-MgGraphRequest -Method Post -Uri "https://graph.microsoft.com/v1.0/identity/conditionalAccess/policies" -Body ($_ | ConvertTo-Json -Depth 10) -ContentType "application/json"
+                Write-Verbose "CA policy '$($_.displayName)' was created with id $($result.Id)"
+            }
         }
 
     
@@ -120,9 +122,11 @@ Process {
         Where-Object displayName -in $conditionalAccessPolicies.displayName |
         ForEach-Object {
             $conditionalAccessPolicy = $conditionalAccessPolicies | Where-Object displayName -eq $_.displayName
-            Write-Verbose "CA policy '$($_.displayName)' already exists with id '$($conditionalAccessPolicy.Id)', ensuring that it is correct (comparing is a nightmare)"
-
-            Invoke-MgGraphRequest -Method Patch -Uri "https://graph.microsoft.com/v1.0/identity/conditionalAccess/policies/$($conditionalAccessPolicy.Id)" -Body ($_ | ConvertTo-Json -Depth 10) -ContentType "application/json"
+            
+            if($PSCmdlet.ShouldProcess("CA policy '$($_.displayName)' already exists with id '$($conditionalAccessPolicy.Id)', ensuring that it is correct (comparing is a nightmare)")){
+                Write-Verbose "CA policy '$($_.displayName)' already exists with id '$($conditionalAccessPolicy.Id)', ensuring that it is correct (comparing is a nightmare)"
+                Invoke-MgGraphRequest -Method Patch -Uri "https://graph.microsoft.com/v1.0/identity/conditionalAccess/policies/$($conditionalAccessPolicy.Id)" -Body ($_ | ConvertTo-Json -Depth 10) -ContentType "application/json"
+            }
         }
 
     Pop-Location
