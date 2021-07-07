@@ -1,0 +1,51 @@
+{
+    "displayName": "Azure management - Require MFA for all users",
+    "state": "enabled",
+    "conditions": {
+        "userRiskLevels": [],
+        "signInRiskLevels": [],
+        "clientAppTypes": [
+            "exchangeActiveSync",
+            "browser",
+            "mobileAppsAndDesktopClients",
+            "other"
+        ],
+        "platforms": null,
+        "locations": null,
+        "applications": {
+            "includeApplications": [
+                "797f4846-ba00-4fd7-ba43-dac1f8f63013"
+            ],
+            "excludeApplications": [],
+            "includeUserActions": []
+        },
+        "users": {
+            "includeUsers": [
+                "All"
+            ],
+            "excludeUsers": [],
+            "includeGroups": [],
+            "excludeGroups": [],
+            "includeRoles": [],
+            "excludeRoles": []
+        }
+    },
+    "grantControls": {
+        "operator": "OR",
+        "builtInControls": [
+            "mfa"
+        ],
+        "customAuthenticationFactors": [],
+        "termsOfUse": []
+    },
+    "sessionControls": {
+        "applicationEnforcedRestrictions": null,
+        "cloudAppSecurity": null,
+        "persistentBrowser": null,
+        "signInFrequency": {
+            "value": 8,
+            "type": "hours",
+            "isEnabled": true
+        }
+    }
+}
