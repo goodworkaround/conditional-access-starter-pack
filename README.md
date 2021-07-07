@@ -30,7 +30,8 @@ This repository contains a simple script that can help you deploy a good baselin
 |-|-|-|
 |Tenant|String|The x.onmicrosoft.com tenant name of the tenant where you want to deploy the CA policies|
 |ExemptedAccounts|String array|A list of users that will be exempted from policies blocking or requiring MFA or other grant|
-|AllowedCountries|String array||
+
+The script supports the **-WhatIf** parameter, if you want to "pretend" to run the script first, to see what it will do.
 
 ### Example
 
