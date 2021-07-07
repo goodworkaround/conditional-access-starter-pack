@@ -1,6 +1,16 @@
 # Conditional Access Starter Pack
 
-This repository contains a simple script that can help you deploy a good baseline of Conditional Access Policies to your Azure AD tenant
+This repository contains a simple script that can help you deploy a good baseline of Conditional Access Policies to your Azure AD tenant. The following conditional access policies will be created, which should keep you covered in most circumstances:
+
+- All apps - Block legacy authentication
+- All apps - Require MFA for all guests
+- All apps - Require MFA for all users assigned Azure AD roles
+- All apps - Require MFA or compliant device for all users
+- Azure management - Require MFA for all users
+- Microsoft 365 - Enable session controls for all users
+- Microsoft 365 - Require approved app for all users
+- User action - Block register security info for all users when not in acceptable location
+- User action - Require MFA for all users when registering device
 
 ## Prerequisites
 
@@ -16,7 +26,6 @@ This repository contains a simple script that can help you deploy a good baselin
 - Start pwsh.exe (or similar for Mac and Linux)
 - Navigate to the folder where you downloaded this repository and run Deploy.ps1 with the following parameters
 
-|-|-|-|
 |Parameter|Type|Description|
 |-|-|-|
 |Tenant|String|The x.onmicrosoft.com tenant name of the tenant where you want to deploy the CA policies|
