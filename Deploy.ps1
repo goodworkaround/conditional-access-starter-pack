@@ -17,7 +17,45 @@ Param(
     [Boolean] $DeleteUnknownPolicies = $false
 )
 
+Begin {
+    <#
+    .Synopsis
+        Helper method to wrap Compare-Object with null support
+    .DESCRIPTION
+        Helper method to wrap Compare-Object with null support
+    .EXAMPLE
+        Compare-Value "yes" $null
+    #>
+    function Compare-Value {
+        [CmdletBinding()]
+
+        param (
+            [Parameter(Mandatory=$false)]
+            $ReferenceObject,
+
+            [Parameter(Mandatory=$false)]
+            $DifferenceObject,
+
+            [Parameter(Mandatory=$false)]
+            [Boolean] $Serialize = $false
+        )
+
+        Process {
+            if($null -eq $ReferenceObject -or $null -eq $DifferenceObject) {
+                return $ReferenceObject -ne $DifferenceObject
+            } else {
+                if($Serialize) {
+                    Compare-Object (ConvertTo-Json -InputObject $ReferenceObject -Depth 20 -Compress) (ConvertTo-Json -InputObject $DifferenceObject -Depth 20 -Compress)
+                } else {
+                    Compare-Object $ReferenceObject $DifferenceObject
+                }                
+            }
+        }
+    }
+}
+
 Process {
+    $Error.Clear()
     Push-Location $PSScriptRoot
 
     #
@@ -131,11 +169,52 @@ Process {
         ForEach-Object {
             $conditionalAccessPolicy = $conditionalAccessPolicies | Where-Object displayName -eq $_.displayName
             
-            if($PSCmdlet.ShouldProcess("CA policy '$($_.displayName)' already exists with id '$($conditionalAccessPolicy.Id)', ensuring that it is correct (comparing is a nightmare)")){
-                Write-Verbose "CA policy '$($_.displayName)' already exists with id '$($conditionalAccessPolicy.Id)', ensuring that it is correct (comparing is a nightmare)"
-                Invoke-MgGraphRequest -Method Patch -Uri "https://graph.microsoft.com/v1.0/identity/conditionalAccess/policies/$($conditionalAccessPolicy.Id)" -Body ($_ | ConvertTo-Json -Depth 10) -ContentType "application/json"
+            $needsUpdate = 
+                (Compare-Value $_.state $conditionalAccessPolicy.state) -or
+                (Compare-Value $_.conditions.applications.excludeApplications $conditionalAccessPolicy.conditions.applications.excludeApplications) -or
+                (Compare-Value $_.conditions.applications.includeApplications $conditionalAccessPolicy.conditions.applications.includeApplications) -or
+                (Compare-Value $_.conditions.applications.includeUserActions $conditionalAccessPolicy.conditions.applications.includeUserActions) -or
+                (Compare-Value $_.conditions.users.excludeRoles $conditionalAccessPolicy.conditions.users.excludeRoles) -or
+                (Compare-Value $_.conditions.users.includeRoles $conditionalAccessPolicy.conditions.users.includeRoles) -or
+                (Compare-Value $_.conditions.users.excludeUsers $conditionalAccessPolicy.conditions.users.excludeUsers) -or
+                (Compare-Value $_.conditions.users.includeUsers $conditionalAccessPolicy.conditions.users.includeUsers) -or
+                (Compare-Value $_.conditions.users.excludeGroups $conditionalAccessPolicy.conditions.users.excludeGroups) -or
+                (Compare-Value $_.conditions.users.includeGroups $conditionalAccessPolicy.conditions.users.includeGroups) -or
+                (Compare-Value $_.conditions.locations.includeLocations $conditionalAccessPolicy.conditions.locations.includeLocations) -or
+                (Compare-Value $_.conditions.locations.excludeLocations $conditionalAccessPolicy.conditions.locations.excludeLocations) -or
+                (Compare-Value $_.conditions.userRiskLevels $conditionalAccessPolicy.conditions.userRiskLevels) -or
+                (Compare-Value $_.conditions.platforms.excludePlatforms $conditionalAccessPolicy.conditions.platforms.excludePlatforms) -or
+                (Compare-Value $_.conditions.platforms.includePlatforms $conditionalAccessPolicy.conditions.platforms.includePlatforms) -or
+                (Compare-Value $_.conditions.clientAppTypes $conditionalAccessPolicy.conditions.clientAppTypes) -or
+                (Compare-Value $_.conditions.signInRiskLevels $conditionalAccessPolicy.conditions.signInRiskLevels) -or
+                (Compare-Value $_.grantControls.termsOfUse $conditionalAccessPolicy.grantControls.termsOfUse) -or
+                (Compare-Value $_.grantControls.builtInControls $conditionalAccessPolicy.grantControls.builtInControls) -or
+                (Compare-Value $_.grantControls.operator $conditionalAccessPolicy.grantControls.operator) -or
+                (Compare-Value $_.grantControls.customAuthenticationFactors $conditionalAccessPolicy.grantControls.customAuthenticationFactors) -or
+                (Compare-Value $_.sessionControls.persistentBrowser $conditionalAccessPolicy.sessionControls.persistentBrowser -Serialize:$true) -or
+                (Compare-Value $_.sessionControls.signInFrequency $conditionalAccessPolicy.sessionControls.signInFrequency -Serialize:$true) -or
+                (Compare-Value $_.sessionControls.persistentBrowser $conditionalAccessPolicy.sessionControls.persistentBrowser -Serialize:$true) -or
+                (Compare-Value $_.sessionControls.applicationEnforcedRestrictions $conditionalAccessPolicy.sessionControls.applicationEnforcedRestrictions -Serialize:$true) -or
+                (Compare-Value $_.sessionControls.cloudAppSecurity $conditionalAccessPolicy.sessionControls.cloudAppSecurity -Serialize:$true)            
+                
+            if($needsUpdate) {
+                
+                $_.sessionControls.signInFrequency | convertto-json -compress
+                "VS"
+                $conditionalAccessPolicy.sessionControls.signInFrequency | convertto-json -compress
+
+                if($PSCmdlet.ShouldProcess("Updating CA policy '$($_.displayName)'")){
+                    Write-Host "Updating CA policy '$($_.displayName)'"
+                    Invoke-MgGraphRequest -Method Patch -Uri "https://graph.microsoft.com/v1.0/identity/conditionalAccess/policies/$($conditionalAccessPolicy.Id)" -Body ($_ | ConvertTo-Json -Depth 10) -ContentType "application/json"
+                }
             }
         }
 
     Pop-Location
+
+    if($Error) {
+        Write-Host "Finished with errors"
+    } else {
+        Write-Host "Finished successfully"
+    }
 }

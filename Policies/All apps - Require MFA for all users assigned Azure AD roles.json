@@ -105,9 +105,9 @@
         "cloudAppSecurity": null,
         "persistentBrowser": null,
         "signInFrequency": {
-            "value": 8,
             "type": "hours",
-            "isEnabled": true
+            "isEnabled": true,
+            "value": 8
         }
     }
 }
