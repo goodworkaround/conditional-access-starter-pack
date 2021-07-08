@@ -152,10 +152,13 @@ Process {
     $policiesToDeploy |
         Where-Object displayName -notin $conditionalAccessPolicies.displayName |
         ForEach-Object {
+            Write-Host "Creating CA policy '$($_.displayName)'"
             if($PSCmdlet.ShouldProcess("Creating CA policy '$($_.displayName)'")){
-                Write-Verbose "Creating CA policy '$($_.displayName)'"
                 $result = Invoke-MgGraphRequest -Method Post -Uri "https://graph.microsoft.com/v1.0/identity/conditionalAccess/policies" -Body ($_ | ConvertTo-Json -Depth 10) -ContentType "application/json"
                 Write-Host "CA policy '$($_.displayName)' was created with id $($result.Id)"
+            } else {
+                Write-Host "WhatIf enabled, here is the content of the policy:"
+                ($_ | ConvertTo-Json -Depth 10) | Write-Host
             }
         }
 
@@ -198,9 +201,12 @@ Process {
                 (Compare-Value $_.sessionControls.cloudAppSecurity $conditionalAccessPolicy.sessionControls.cloudAppSecurity -Serialize:$true)            
                 
             if($needsUpdate) {
+                Write-Host "Updating CA policy '$($_.displayName)'"
                 if($PSCmdlet.ShouldProcess("Updating CA policy '$($_.displayName)'")){
-                    Write-Host "Updating CA policy '$($_.displayName)'"
                     Invoke-MgGraphRequest -Method Patch -Uri "https://graph.microsoft.com/v1.0/identity/conditionalAccess/policies/$($conditionalAccessPolicy.Id)" -Body ($_ | ConvertTo-Json -Depth 10) -ContentType "application/json"
+                } else {
+                    Write-Host "WhatIf enabled, here is the content of the policy:"
+                    ($_ | ConvertTo-Json -Depth 10) | Write-Host
                 }
             }
         }
