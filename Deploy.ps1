@@ -198,11 +198,6 @@ Process {
                 (Compare-Value $_.sessionControls.cloudAppSecurity $conditionalAccessPolicy.sessionControls.cloudAppSecurity -Serialize:$true)            
                 
             if($needsUpdate) {
-                
-                $_.sessionControls.signInFrequency | convertto-json -compress
-                "VS"
-                $conditionalAccessPolicy.sessionControls.signInFrequency | convertto-json -compress
-
                 if($PSCmdlet.ShouldProcess("Updating CA policy '$($_.displayName)'")){
                     Write-Host "Updating CA policy '$($_.displayName)'"
                     Invoke-MgGraphRequest -Method Patch -Uri "https://graph.microsoft.com/v1.0/identity/conditionalAccess/policies/$($conditionalAccessPolicy.Id)" -Body ($_ | ConvertTo-Json -Depth 10) -ContentType "application/json"
