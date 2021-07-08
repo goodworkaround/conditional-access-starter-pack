@@ -11,9 +11,10 @@ Param(
 
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
-    [String] $NamedLocationForSecurityRegistration = "Allowed to register security info"
+    [String] $NamedLocationForSecurityRegistration = "Allowed to register security info",
 
-    
+    [Parameter(Mandatory=$false)]
+    [Boolean] $DeleteUnknownPolicies = $false
 )
 
 Process {
@@ -62,7 +63,7 @@ Process {
     #
     $namedLocation = Get-MgIdentityConditionalAccessNamedLocation  | Where-Object displayName -eq $NamedLocationForSecurityRegistration
     if(!$namedLocation) {
-        Write-Error "No named location called '$NamedLocationForSecurityRegistration', please create in the Azure Portal. This is used for determining which countries are acceptable for users to be in, when they self service register for SSPR and MFA." -ErrorAction Stop
+        Write-Error "No named location called '$NamedLocationForSecurityRegistration', please create in the Azure Portal, under Azure Active Directory -> Security -> Conditional Access -> Named locations. This is used for determining which countries are acceptable for users to be in, when they self service register for SSPR and MFA." -ErrorAction Stop
     }
 
     #
@@ -96,7 +97,14 @@ Process {
     $conditionalAccessPolicies | 
         Where-Object displayName -notin $policiesToDeploy.displayName |
         ForEach-Object {
-            Write-Warning "CA policy present in tenant: '$($_.displayName)', please clean up"
+            if($DeleteUnknownPolicies) {
+                if($PSCmdlet.ShouldProcess("Deleting CA policy '$($_.displayName)'")){
+                    Write-Host "Deleting CA policy '$($_.displayName)'"
+                    Invoke-MgGraphRequest -Method Delete -Uri "https://graph.microsoft.com/v1.0/identity/conditionalAccess/policies/$($_.Id)"
+                }
+            } else {
+                Write-Warning "CA policy present in tenant: '$($_.displayName)', please clean up (Run this script with parameter -DeleteUnknownPolicies:`$true to delete unknown policies)"
+            }
         }
 
     #
@@ -109,7 +117,7 @@ Process {
             if($PSCmdlet.ShouldProcess("Creating CA policy '$($_.displayName)'")){
                 Write-Verbose "Creating CA policy '$($_.displayName)'"
                 $result = Invoke-MgGraphRequest -Method Post -Uri "https://graph.microsoft.com/v1.0/identity/conditionalAccess/policies" -Body ($_ | ConvertTo-Json -Depth 10) -ContentType "application/json"
-                Write-Verbose "CA policy '$($_.displayName)' was created with id $($result.Id)"
+                Write-Host "CA policy '$($_.displayName)' was created with id $($result.Id)"
             }
         }
 
