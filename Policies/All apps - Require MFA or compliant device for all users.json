@@ -29,7 +29,7 @@
         }
     },
     "grantControls": {
-        "operator": "AND",
+        "operator": "OR",
         "builtInControls": [
             "mfa",
             "compliantDevice",
