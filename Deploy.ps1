@@ -11,7 +11,7 @@ Param(
 
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
-    [String] $NamedLocationForSecurityRegistration = "Allowed to register security info",
+    [String[]] $NamedLocationsForSecurityRegistration = @("Allowed to register security info"),
 
     [Parameter(Mandatory=$false)]
     [Boolean] $DeleteUnknownPolicies = $false
@@ -99,10 +99,17 @@ Process {
     #
     # Get named locations
     #
-    $namedLocation = Get-MgIdentityConditionalAccessNamedLocation  | Where-Object displayName -eq $NamedLocationForSecurityRegistration
-    if(!$namedLocation) {
-        Write-Error "No named location called '$NamedLocationForSecurityRegistration', please create in the Azure Portal, under Azure Active Directory -> Security -> Conditional Access -> Named locations. This is used for determining which countries are acceptable for users to be in, when they self service register for SSPR and MFA." -ErrorAction Stop
-    }
+    $allNamedLocations = Get-MgIdentityConditionalAccessNamedLocation
+    $namedLocations = New-Object System.Collections.ArrayList
+    $NamedLocationsForSecurityRegistration | 
+        ForEach-Object {
+            $namedLocation = $allNamedLocations | Where-Object displayName -eq $_
+            if($namedLocation) {
+                $namedLocations.Add($namedLocation.Id) | Out-Null
+            } else {
+                Write-Error "No named location called '$_', please create in the Azure Portal, under Azure Active Directory -> Security -> Conditional Access -> Named locations. This is used for determining which countries are acceptable for users to be in, when they self service register for SSPR and MFA." -ErrorAction Stop
+            }
+        }
 
     #
     # Read policy json files
@@ -119,7 +126,7 @@ Process {
             }
 
             if($policy.displayName -eq 'User action - Block register security info for all users when not in acceptable location') {
-                $policy.conditions.locations.excludeLocations = @($namedLocation.Id)
+                $policy.conditions.locations.excludeLocations = $namedLocations
             }
 
             $policy

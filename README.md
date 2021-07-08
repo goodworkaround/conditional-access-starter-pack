@@ -26,15 +26,23 @@ This repository contains a simple script that can help you deploy a good baselin
 - Start pwsh.exe (or similar for Mac and Linux)
 - Navigate to the folder where you downloaded this repository and run Deploy.ps1 with the following parameters
 
-|Parameter|Type|Description|
-|-|-|-|
-|Tenant|String|The x.onmicrosoft.com tenant name of the tenant where you want to deploy the CA policies|
-|ExemptedAccounts|String array|A list of users that will be exempted from policies blocking or requiring MFA or other grant|
+|Parameter|Required?|Type|Description|
+|-|-|-|-|
+|Tenant|Yes|String|The x.onmicrosoft.com tenant name of the tenant where you want to deploy the CA policies|
+|ExemptedAccounts|Yes|String array|A list of users (upns or objectids) that will be exempted from policies blocking or requiring MFA or other grant|
+|NamedLocationsForSecurityRegistration|No|String|The names of the named locations approved for registering security information|
+|DeleteUnknownPolicies|No|Boolean|Set to true in order to automatically delete policies not convered by this deployment script|
 
 The script supports the **-WhatIf** parameter, if you want to "pretend" to run the script first, to see what it will do.
 
-### Example
+### Example 1
 
 ```PowerShell
-.\Deploy.ps1 -Tenant "M365x843525.onmicrosoft.com" -ExemptedAccounts "AdeleV@M365x843525.OnMicrosoft.com","Admin@M365x843525.OnMicrosoft.com" -Verbose
+.\Deploy.ps1 -Tenant "M365x843525.onmicrosoft.com" -ExemptedAccounts "AdeleV@M365x843525.OnMicrosoft.com","Admin@M365x843525.OnMicrosoft.com" -DeleteUnknownPolicies:$true  -NamedLocationsForSecurityRegistration "Norway","Sweden","Denmark"
+```
+
+### Example 2
+
+```PowerShell
+.\Deploy.ps1 -Tenant "M365x843525.onmicrosoft.com" -ExemptedAccounts "AdeleV@M365x843525.OnMicrosoft.com","Admin@M365x843525.OnMicrosoft.com" -Verbose -WhatIf
 ```
