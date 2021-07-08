@@ -5,10 +5,7 @@
         "userRiskLevels": [],
         "signInRiskLevels": [],
         "clientAppTypes": [
-            "exchangeActiveSync",
-            "browser",
-            "mobileAppsAndDesktopClients",
-            "other"
+            "all"
         ],
         "platforms": null,
         "locations": null,
